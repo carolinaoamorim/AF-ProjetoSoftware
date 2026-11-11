@@ -11,7 +11,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { ROLES_CLAIM } from './config'
-import Avaliacoes from './Avaliacoes'
+import Tarefa from './Tarefa'
 import Perfil from './Perfil'
 import './App.css'
 
@@ -20,7 +20,7 @@ export default function App() {
     useAuth0()
   const [token, setToken] = useState('')
   const [roles, setRoles] = useState([])
-  const [pagina, setPagina] = useState('avaliacoes') // 'avaliacoes' | 'perfil'
+  const [pagina, setPagina] = useState('tarefa') // 'tarefa' | 'perfil'
 
   // ---------------------------------------------------------------
   // [1] TOKEN E ROLES
@@ -47,7 +47,7 @@ export default function App() {
     return (
       <div className="centro">
         <div className="card">
-          <h1>Avaliações</h1>
+          <h1>Tarefas</h1>
           <p>Entre com sua conta para continuar.</p>
           <button className="primario" onClick={() => loginWithRedirect()}>
             Entrar
@@ -66,7 +66,7 @@ export default function App() {
     <div className="pagina">
       <header className="card linha">
         <nav className="linha">
-          <button onClick={() => setPagina('avaliacoes')}>Avaliações</button>
+          <button onClick={() => setPagina('tarefa')}>Tarefa</button>
           <button onClick={() => setPagina('perfil')}>Perfil</button>
         </nav>
         <div className="linha">
@@ -80,7 +80,7 @@ export default function App() {
         </div>
       </header>
 
-      {pagina === 'avaliacoes' && <Avaliacoes token={token} admin={admin} />}
+      {pagina === 'tarefa' && <Tarefa token={token} admin={admin} />}
       {pagina === 'perfil' && <Perfil user={user} token={token} roles={roles} />}
     </div>
   )

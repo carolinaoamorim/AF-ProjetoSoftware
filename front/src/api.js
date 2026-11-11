@@ -3,7 +3,6 @@
 //
 // Uso:
 //   await chamar(token, '')                                  GET    /avaliacoes
-//   await chamar(token, '?emailAvaliado=x')                  GET    /avaliacoes?emailAvaliado=x
 //   await chamar(token, '/5')                                GET    /avaliacoes/5
 //   await chamar(token, '', 'POST', { ...dados })            POST   /avaliacoes
 //   await chamar(token, '/5', 'PUT', { ...dados })           PUT    /avaliacoes/5
