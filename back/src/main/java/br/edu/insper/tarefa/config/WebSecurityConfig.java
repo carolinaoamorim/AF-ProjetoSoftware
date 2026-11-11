@@ -48,10 +48,9 @@ public class WebSecurityConfig implements WebMvcConfigurer {
                          */
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // GET /avaliacoes, /avaliacoes?emailAvaliado=x, /avaliacoes/{id}, /avaliacoes/media?email=x
-                        .requestMatchers(HttpMethod.GET, "/avaliacoes", "/avaliacoes/**").hasAnyAuthority("ADMIN", "USER")
-                        .requestMatchers(HttpMethod.POST, "/avaliacoes").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/avaliacoes/**").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/avaliacoes/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/tarefa", "/tarefa/**").hasAnyAuthority("ADMIN", "USER")
+                        .requestMatchers(HttpMethod.POST, "/tarefa").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/tarefa/**").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .csrf(AbstractHttpConfigurer::disable)
