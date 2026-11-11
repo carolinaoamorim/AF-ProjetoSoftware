@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { ROLES_CLAIM } from './config'
 import Tarefa from './Tarefa'
+import Perfil from './Perfil'
 import './App.css'
 
 export default function App() {
@@ -80,6 +81,7 @@ export default function App() {
       </header>
 
       {pagina === 'tarefa' && <Tarefa token={token} admin={admin} />}
+      {pagina === 'perfil' && <Perfil user={user} token={token} roles={roles} />}
     </div>
   )
 }
