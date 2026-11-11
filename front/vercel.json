@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/api/avaliacoes",
-      "destination": "http://100.58.186.7:8080/avaliacoes"
+      "destination": "http://98.92.208.21:8080/avaliacoes"
     },
     {
       "source": "/api/avaliacoes/:path*",
-      "destination": "http://100.58.186.7:8080/avaliacoes/:path*"
+      "destination": "http://98.92.208.21:8080/avaliacoes/:path*"
     }
   ]
 }

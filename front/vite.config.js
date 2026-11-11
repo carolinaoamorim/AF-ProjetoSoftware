@@ -8,7 +8,7 @@ export default defineConfig({
     // Em desenvolvimento, /api/* é redirecionado para o back-end Spring local
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://98.92.208.21:8080',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
