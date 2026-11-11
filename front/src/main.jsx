@@ -1,18 +1,20 @@
+// Ponto de entrada: liga o Auth0 e desenha o App. Normalmente não precisa mexer
+// (os valores do Auth0 ficam em config.js).
 import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.jsx'
 import { Auth0Provider } from '@auth0/auth0-react'
-
+import { AUTH0_AUDIENCE, AUTH0_CLIENT_ID, AUTH0_DOMAIN } from './config'
+import App from './App.jsx'
+import './index.css'
 
 createRoot(document.getElementById('root')).render(
   <Auth0Provider
-      domain="dev-a3l68wtd82inod7x.us.auth0.com"
-      clientId="SvHLrX1a3GBKVCfryDxR0CJ662Td1YWJ"
-      authorizationParams={{
-        audience: "https://af-api",
-        redirect_uri: window.location.origin
-      }}
-    >
+    domain={AUTH0_DOMAIN}
+    clientId={AUTH0_CLIENT_ID}
+    authorizationParams={{
+      audience: AUTH0_AUDIENCE,
+      redirect_uri: window.location.origin,
+    }}
+  >
     <App />
   </Auth0Provider>,
 )

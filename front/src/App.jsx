@@ -1,86 +1,87 @@
-import './App.css'
+// =====================================================================
+// APP: login, cabeçalho e troca de página.
+//
+//   [1] TOKEN E ROLES   pega o token do Auth0 e lê as roles de dentro dele
+//   [2] NÃO LOGADO      tela com o botão de entrar
+//   [3] LOGADO          cabeçalho (menu, email, roles, sair) + página atual
+//
+// Página nova: crie o arquivo (copie Perfil.jsx), importe aqui,
+// adicione um botão no <nav> e uma linha no final, como as que já existem.
+// =====================================================================
 import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
-import Home from './Home'
+import { ROLES_CLAIM } from './config'
 import Avaliacoes from './Avaliacoes'
-import LoginButton from './LoginButton'
-import LogoutButton from './LogoutButton'
+import Perfil from './Perfil'
+import './App.css'
 
-const ROLES_CLAIM = 'https://social-insper.com/roles'
-
-function decodeToken(token) {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')
-    return JSON.parse(atob(base64))
-  } catch {
-    return {}
-  }
-}
-
-function App() {
-  const [currentPage, setCurrentPage] = useState('avaliacoes')
+export default function App() {
+  const { user, isAuthenticated, isLoading, loginWithRedirect, logout, getAccessTokenSilently } =
+    useAuth0()
   const [token, setToken] = useState('')
   const [roles, setRoles] = useState([])
-  const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0()
+  const [pagina, setPagina] = useState('avaliacoes') // 'avaliacoes' | 'perfil'
 
+  // ---------------------------------------------------------------
+  // [1] TOKEN E ROLES
+  // ---------------------------------------------------------------
   useEffect(() => {
     if (!isAuthenticated) return
-    getAccessTokenSilently()
-      .then((accessToken) => {
-        setToken(accessToken)
-        setRoles(decodeToken(accessToken)[ROLES_CLAIM] || [])
-      })
-      .catch((e) => console.error('Erro ao buscar token:', e))
+    getAccessTokenSilently().then((t) => {
+      setToken(t)
+      // O token é "cabeçalho.CONTEUDO.assinatura": o conteúdo é JSON em base64
+      const conteudo = JSON.parse(atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      setRoles(conteudo[ROLES_CLAIM] || [])
+    })
   }, [isAuthenticated, getAccessTokenSilently])
 
-  if (isLoading) {
-    return <div className="centered">Carregando...</div>
-  }
+  // Atalhos de permissão (use nas telas com {admin && (...)})
+  const admin = roles.includes('ADMIN')
 
+  if (isLoading) return <p className="centro">Carregando...</p>
+
+  // ---------------------------------------------------------------
+  // [2] NÃO LOGADO
+  // ---------------------------------------------------------------
   if (!isAuthenticated) {
     return (
-      <div className="centered">
-        <div className="card login-card">
+      <div className="centro">
+        <div className="card">
           <h1>Avaliações</h1>
-          <p className="muted">Entre com sua conta para listar e cadastrar avaliações.</p>
-          <LoginButton />
+          <p>Entre com sua conta para continuar.</p>
+          <button className="primario" onClick={() => loginWithRedirect()}>
+            Entrar
+          </button>
         </div>
       </div>
     )
   }
 
-  const isAdmin = roles.includes('ADMIN')
+  if (!token) return <p className="centro">Carregando token...</p>
 
+  // ---------------------------------------------------------------
+  // [3] LOGADO
+  // ---------------------------------------------------------------
   return (
-    <div className="page">
-      <header className="card header">
-        <nav className="nav">
-          <button
-            className={currentPage === 'avaliacoes' ? 'btn btn-primary' : 'btn'}
-            onClick={() => setCurrentPage('avaliacoes')}
-          >
-            Avaliações
-          </button>
-          <button
-            className={currentPage === 'home' ? 'btn btn-primary' : 'btn'}
-            onClick={() => setCurrentPage('home')}
-          >
-            Perfil
-          </button>
+    <div className="pagina">
+      <header className="card linha">
+        <nav className="linha">
+          <button onClick={() => setPagina('avaliacoes')}>Avaliações</button>
+          <button onClick={() => setPagina('perfil')}>Perfil</button>
         </nav>
-        <div className="header-user">
-          <span className="muted">{user.email}</span>
+        <div className="linha">
+          <span>{user.email}</span>
           {roles.map((r) => (
-            <span key={r} className="badge">{r}</span>
+            <span key={r} className="role">{r}</span>
           ))}
-          <LogoutButton />
+          <button onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
+            Sair
+          </button>
         </div>
       </header>
 
-      {currentPage === 'home' && <Home user={user} token={token} roles={roles} />}
-      {currentPage === 'avaliacoes' && <Avaliacoes user={user} token={token} isAdmin={isAdmin} />}
+      {pagina === 'avaliacoes' && <Avaliacoes token={token} admin={admin} />}
+      {pagina === 'perfil' && <Perfil user={user} token={token} roles={roles} />}
     </div>
   )
 }
-
-export default App

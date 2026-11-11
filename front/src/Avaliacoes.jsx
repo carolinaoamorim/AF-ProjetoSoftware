@@ -1,207 +1,229 @@
-import { useCallback, useEffect, useState } from 'react'
+// =====================================================================
+// TELA DE AVALIAÇÕES
+//
+// Índice (procure pelo número com Ctrl+F):
+//   [1] CAMPOS     os campos do formulário  <- trocar na prova
+//   [2] ESTADO     o que a tela guarda (lista, form, erro...)
+//   [3] AÇÕES      listar, salvar, editar, excluir, calcularMedia
+//   [4] TELA       formulário, média, filtros, tabela  <- trocar na prova
+//
+// Trocar a entidade (ex.: Tarefa):
+//   - config.js: API = '/api/tarefas'
+//   - [1] VAZIO com os campos novos
+//   - [4] um <input name="campo"> por campo no form
+//   - [4] um <th> e um <td> por campo na tabela
+//
+// Quem vê o quê:  só ADMIN -> {admin && (...)}   qualquer logado -> sem condição
+// =====================================================================
+import { useEffect, useState } from 'react'
+import { chamar } from './api'
 
-const API_URL = '/api'
-
-const emptyForm = (emailAvaliador = '') => ({
-  emailAvaliador,
+// ---------------------------------------------------------------
+// [1] CAMPOS: o formulário começa assim (o nome tem que ser igual ao da entidade no back)
+// ---------------------------------------------------------------
+const VAZIO = {
+  emailAvaliador: '',
   emailAvaliado: '',
   nota: '',
   comentarios: '',
-})
-
-async function mensagemDeErro(response, padrao) {
-  if (response.status === 401) return 'Sessão inválida. Faça login novamente.'
-  if (response.status === 403) return 'Você não tem permissão para esta ação.'
-  try {
-    const body = await response.json()
-    return body.message || body.detail || padrao
-  } catch {
-    return padrao
-  }
 }
 
-export default function Avaliacoes({ user, token, isAdmin }) {
-  const [avaliacoes, setAvaliacoes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
-  const [formData, setFormData] = useState(emptyForm(user.email))
-  const [submitting, setSubmitting] = useState(false)
+export default function Avaliacoes({ token, admin }) {
+  // ---------------------------------------------------------------
+  // [2] ESTADO
+  // ---------------------------------------------------------------
+  const [itens, setItens] = useState([])                // linhas da tabela
+  const [form, setForm] = useState(VAZIO)               // o que está digitado no form
+  const [editandoId, setEditandoId] = useState(null)    // null = cadastrando, número = editando
+  const [filtro, setFiltro] = useState({ emailAvaliado: '', notaMin: '' })
+  const [emailMedia, setEmailMedia] = useState('')
+  const [media, setMedia] = useState(null)
+  const [erro, setErro] = useState('')
 
-  const fetchAvaliacoes = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
-      const response = await fetch(`${API_URL}/avaliacoes`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!response.ok) {
-        throw new Error(await mensagemDeErro(response, 'Erro ao buscar avaliações'))
-      }
-      setAvaliacoes(await response.json())
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [token])
-
+  // Carrega a lista quando a tela abre
   useEffect(() => {
-    if (token) fetchAvaliacoes()
-  }, [token, fetchAvaliacoes])
+    listar()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+  // Atualiza um campo do form. Funciona para qualquer <input name="...">
+  function mudar(e) {
+    setForm({ ...form, [e.target.name]: e.target.value })
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setSuccess('')
-
-    const nota = Number(formData.nota)
-    if (!formData.emailAvaliador || !formData.emailAvaliado || formData.nota === '') {
-      setError('Preencha o email do avaliador, o email do avaliado e a nota.')
-      return
-    }
-    if (Number.isNaN(nota) || nota < 0 || nota > 10) {
-      setError('A nota deve estar entre 0 e 10.')
-      return
-    }
-
+  // Roda uma ação mostrando o erro do back na tela, se der erro
+  async function tentar(acao) {
+    setErro('')
     try {
-      setSubmitting(true)
-      setError('')
-      const response = await fetch(`${API_URL}/avaliacoes`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ...formData, nota }),
-      })
-      if (!response.ok) {
-        throw new Error(await mensagemDeErro(response, 'Erro ao cadastrar avaliação'))
-      }
-      const nova = await response.json()
-      setAvaliacoes((prev) => [nova, ...prev])
-      setFormData(emptyForm(user.email))
-      setSuccess('Avaliação cadastrada com sucesso.')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSubmitting(false)
+      await acao()
+    } catch (e) {
+      setErro(e.message)
     }
   }
 
-  const formatarData = (dataString) => {
-    if (!dataString) return '-'
-    const data = new Date(dataString)
-    return Number.isNaN(data.getTime()) ? dataString : data.toLocaleString('pt-BR')
+  // ---------------------------------------------------------------
+  // [3] AÇÕES
+  // ---------------------------------------------------------------
+
+  // GET /avaliacoes  (com ?emailAvaliado=x&notaMin=7 se tiver filtro)
+  function listar() {
+    tentar(async () => {
+      const params = new URLSearchParams()
+      if (filtro.emailAvaliado) params.set('emailAvaliado', filtro.emailAvaliado)
+      if (filtro.notaMin !== '') params.set('notaMin', filtro.notaMin)
+      const query = params.toString() ? `?${params}` : ''
+      setItens(await chamar(token, query))
+    })
   }
 
+  // POST /avaliacoes  ou  PUT /avaliacoes/{id}
+  function salvar(e) {
+    e.preventDefault()
+    tentar(async () => {
+      const dados = { ...form, nota: Number(form.nota) } // campos numéricos: Number(...)
+      if (editandoId === null) {
+        await chamar(token, '', 'POST', dados)
+      } else {
+        await chamar(token, `/${editandoId}`, 'PUT', dados)
+      }
+      cancelar()
+      listar()
+    })
+  }
+
+  // Joga a linha da tabela no formulário (o botão Salvar vira PUT)
+  function editar(item) {
+    setEditandoId(item.id)
+    setForm({
+      emailAvaliador: item.emailAvaliador,
+      emailAvaliado: item.emailAvaliado,
+      nota: item.nota,
+      comentarios: item.comentarios || '',
+    })
+  }
+
+  function cancelar() {
+    setEditandoId(null)
+    setForm(VAZIO)
+  }
+
+  // DELETE /avaliacoes/{id}
+  function excluir(id) {
+    if (!confirm(`Excluir a avaliação ${id}?`)) return
+    tentar(async () => {
+      await chamar(token, `/${id}`, 'DELETE')
+      listar()
+    })
+  }
+
+  // GET /avaliacoes/media?email=x
+  function calcularMedia(e) {
+    e.preventDefault()
+    tentar(async () => {
+      setMedia(await chamar(token, `/media?email=${encodeURIComponent(emailMedia)}`))
+    })
+  }
+
+  // ---------------------------------------------------------------
+  // [4] TELA
+  // ---------------------------------------------------------------
   return (
     <>
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
+      {erro && <p className="erro">{erro}</p>}
 
-      {isAdmin ? (
+      {/* ----- [4.1] FORMULÁRIO (só ADMIN) ----- */}
+      {admin && (
         <section className="card">
-          <h2>Cadastrar avaliação</h2>
-          <form onSubmit={handleSubmit} className="form">
+          <h2>{editandoId === null ? 'Cadastrar avaliação' : `Editar avaliação ${editandoId}`}</h2>
+          <form onSubmit={salvar} className="form">
             <label>
               Email do avaliador
-              <input
-                type="email"
-                name="emailAvaliador"
-                value={formData.emailAvaliador}
-                onChange={handleInputChange}
-                required
-              />
+              <input type="email" name="emailAvaliador" value={form.emailAvaliador} onChange={mudar} required />
             </label>
             <label>
               Email do avaliado
-              <input
-                type="email"
-                name="emailAvaliado"
-                value={formData.emailAvaliado}
-                onChange={handleInputChange}
-                placeholder="aluno@al.insper.edu.br"
-                required
-              />
+              <input type="email" name="emailAvaliado" value={form.emailAvaliado} onChange={mudar} required />
             </label>
             <label>
               Nota (0 a 10)
-              <input
-                type="number"
-                name="nota"
-                min="0"
-                max="10"
-                step="0.1"
-                value={formData.nota}
-                onChange={handleInputChange}
-                required
-              />
+              <input type="number" name="nota" min="0" max="10" step="0.1" value={form.nota} onChange={mudar} required />
             </label>
-            <label className="full">
+            <label>
               Comentários
-              <textarea
-                name="comentarios"
-                rows="3"
-                maxLength="2000"
-                value={formData.comentarios}
-                onChange={handleInputChange}
-              />
+              <textarea name="comentarios" maxLength="500" value={form.comentarios} onChange={mudar} />
             </label>
-            <button type="submit" className="btn btn-primary full" disabled={submitting || !token}>
-              {submitting ? 'Cadastrando...' : 'Cadastrar avaliação'}
-            </button>
+
+            <div className="linha">
+              <button type="submit" className="primario">
+                {editandoId === null ? 'Cadastrar' : 'Salvar'}
+              </button>
+              {editandoId !== null && (
+                <button type="button" onClick={cancelar}>Cancelar</button>
+              )}
+            </div>
           </form>
         </section>
-      ) : (
-        <p className="muted note">Somente administradores podem cadastrar avaliações.</p>
       )}
 
+      {/* ----- [4.2] MÉDIA DE UMA PESSOA ----- */}
       <section className="card">
-        <div className="section-title">
-          <h2>Avaliações cadastradas</h2>
-          <button className="btn" onClick={fetchAvaliacoes} disabled={loading || !token}>
-            Atualizar
-          </button>
+        <h2>Média de uma pessoa</h2>
+        <form onSubmit={calcularMedia} className="linha">
+          <input type="email" placeholder="email do avaliado" value={emailMedia} onChange={(e) => setEmailMedia(e.target.value)} required />
+          <button type="submit">Calcular</button>
+          {media && (
+            <span>
+              {media.quantidade === 0
+                ? 'Nenhuma avaliação.'
+                : `Média ${media.media.toFixed(2)} em ${media.quantidade} avaliação(ões)`}
+            </span>
+          )}
+        </form>
+      </section>
+
+      {/* ----- [4.3] FILTROS + TABELA ----- */}
+      <section className="card">
+        <h2>Avaliações</h2>
+
+        <div className="linha">
+          <input placeholder="email do avaliado" value={filtro.emailAvaliado} onChange={(e) => setFiltro({ ...filtro, emailAvaliado: e.target.value })} />
+          <input type="number" placeholder="nota mínima" value={filtro.notaMin} onChange={(e) => setFiltro({ ...filtro, notaMin: e.target.value })} />
+          <button onClick={listar}>Filtrar</button>
         </div>
 
-        {loading ? (
-          <p className="muted">Carregando avaliações...</p>
-        ) : avaliacoes.length === 0 ? (
-          <p className="muted">Nenhuma avaliação cadastrada ainda.</p>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Avaliador</th>
-                  <th>Avaliado</th>
-                  <th>Nota</th>
-                  <th>Comentários</th>
-                  <th>Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {avaliacoes.map((a) => (
-                  <tr key={a.id}>
-                    <td>{a.id}</td>
-                    <td>{a.emailAvaliador}</td>
-                    <td>{a.emailAvaliado}</td>
-                    <td className="nota">{a.nota}</td>
-                    <td>{a.comentarios || '-'}</td>
-                    <td>{formatarData(a.dataAvaliacao)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Avaliador</th>
+              <th>Avaliado</th>
+              <th>Nota</th>
+              <th>Comentários</th>
+              <th>Data</th>
+              {admin && <th></th>}
+            </tr>
+          </thead>
+          <tbody>
+            {itens.map((item) => (
+              <tr key={item.id}>
+                <td>{item.id}</td>
+                <td>{item.emailAvaliador}</td>
+                <td>{item.emailAvaliado}</td>
+                <td>{item.nota}</td>
+                <td>{item.comentarios}</td>
+                <td>{new Date(item.dataAvaliacao).toLocaleString('pt-BR')}</td>
+                {/* Botões só para ADMIN */}
+                {admin && (
+                  <td className="linha">
+                    <button onClick={() => editar(item)}>Editar</button>
+                    <button onClick={() => excluir(item.id)}>Excluir</button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {itens.length === 0 && <p>Nenhuma avaliação.</p>}
       </section>
     </>
   )

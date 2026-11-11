@@ -10,6 +10,8 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -33,6 +35,7 @@ public class Avaliacao {
     private String emailAvaliado;
 
     @Column(length = 2000)
+    @Size(max = 500, message = "comentários devem ter no máximo 500 caracteres")
     private String comentarios;
 
     @NotNull(message = "nota é obrigatória")
@@ -40,5 +43,7 @@ public class Avaliacao {
     @DecimalMax(value = "10.0", message = "nota deve ser no máximo 10")
     private Double nota;
 
+    // Preenchida pelo servidor; a validação é só um exemplo de "data não pode estar no futuro"
+    @PastOrPresent(message = "data da avaliação não pode estar no futuro")
     private LocalDateTime dataAvaliacao;
 }

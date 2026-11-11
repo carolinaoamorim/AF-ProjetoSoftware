@@ -2,12 +2,16 @@
 
 ## Rotas
 
-| Método | Rota          | Descrição            | Papéis       |
-|--------|---------------|----------------------|--------------|
-| POST   | `/avaliacoes` | cadastrar avaliação  | ADMIN        |
-| GET    | `/avaliacoes` | listar avaliações    | ADMIN, USER  |
+| Método | Rota                     | Descrição                                     | Papéis      |
+|--------|--------------------------|-----------------------------------------------|-------------|
+| GET    | `/avaliacoes`            | listar; `?emailAvaliado=x&notaMin=7` opcionais | ADMIN, USER |
+| GET    | `/avaliacoes/media`      | `?email=x`: média das notas recebidas          | ADMIN, USER |
+| GET    | `/avaliacoes/{id}`       | buscar uma (404 se não existir)                | ADMIN, USER |
+| POST   | `/avaliacoes`            | cadastrar avaliação                            | ADMIN       |
+| PUT    | `/avaliacoes/{id}`       | editar (404 se não existir)                    | ADMIN       |
+| DELETE | `/avaliacoes/{id}`       | excluir (204; 404 se não existir)              | ADMIN       |
 
-Os papéis são lidos da claim `https://social-insper.com/roles` do access token do Auth0.
+Os papéis são lidos da claim `https://social-insper.com/roles` do access token do Auth0. Receitas em [../COMO_MEXER.md](../COMO_MEXER.md).
 
 ## Entidade `Avaliacao`
 
@@ -16,7 +20,7 @@ Os papéis são lidos da claim `https://social-insper.com/roles` do access token
 | `id`             | Integer       | gerado automaticamente                       |
 | `emailAvaliador` | String        | obrigatório, e-mail válido                   |
 | `emailAvaliado`  | String        | obrigatório, e-mail válido                   |
-| `comentarios`    | String        | até 2000 caracteres                          |
+| `comentarios`    | String        | até 500 caracteres                           |
 | `nota`           | Double        | obrigatória, de 0 a 10                       |
 | `dataAvaliacao`  | LocalDateTime | definida pelo servidor no momento do cadastro |
 
@@ -31,10 +35,10 @@ Exemplo de corpo do `POST /avaliacoes`:
 }
 ```
 
-Requisições inválidas (e-mail mal formatado, nota fora de 0–10) retornam `400`.
+Requisições inválidas (e-mail mal formatado, nota fora de 0–10, avaliar a si mesmo) retornam `400` com a mensagem do campo que falhou.
 Sem token retornam `401`; com papel insuficiente, `403`.
 
-A coleção `Avaliacao_API.postman_collection.json` tem exemplos das duas rotas.
+A coleção `Avaliacao_API.postman_collection.json` tem exemplos de `GET` e `POST`.
 
 # Deploy do BackEnd
 

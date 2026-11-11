@@ -15,6 +15,15 @@ Por Carolina Oliveira Amorim
 | Claim das roles | `https://social-insper.com/roles` |
 | Banco | `postgres-aula` na EC2 (porta 5432, `auladb`, `usuario`/`senha`) |
 
+**Para os "a mais" da prova (PUT/DELETE/GET por id com 404, filtro, validação, regra de negócio, média): veja o [COMO_MEXER.md](COMO_MEXER.md).**
+
+| Rota | Quem pode |
+|---|---|
+| `GET /avaliacoes` (`?emailAvaliado=x&notaMin=7`), `/avaliacoes/{id}`, `/avaliacoes/media?email=x` | ADMIN e USER |
+| `POST /avaliacoes`, `PUT /avaliacoes/{id}`, `DELETE /avaliacoes/{id}` | ADMIN |
+
+Antes de entregar, apague as rotas que o enunciado não pede (controller + `WebSecurityConfig`).
+
 ---
 
 ## Checklist da prova (o que trocar)
@@ -23,7 +32,7 @@ Por Carolina Oliveira Amorim
 Em `back/src/main/java/br/edu/insper/avaliacao/avaliacao/`:
 - [ ] **Entity** (`Avaliacao.java`): trocar os campos pelos do enunciado (validações `@NotBlank`, `@Email`, `@DecimalMin/@DecimalMax`).
 - [ ] **Repository**: trocar o nome da entidade.
-- [ ] **Service**: regras do enunciado (ex.: data definida pelo servidor).
+- [ ] **Service**: regras do enunciado (ex.: data definida pelo servidor, "não pode avaliar a si mesmo").
 - [ ] **Controller**: `@RequestMapping("/NOVA_ROTA")`, `@Valid` no `@RequestBody`.
 - [ ] Se trocar o nome do pacote/classes, renomear pelo IntelliJ (Refactor → Rename) para não quebrar imports.
 
@@ -31,7 +40,7 @@ Em `back/src/main/java/br/edu/insper/avaliacao/avaliacao/`:
 Em `back/src/main/java/br/edu/insper/avaliacao/config/WebSecurityConfig.java`:
 - [ ] Trocar `/avaliacoes` pela rota nova.
 - [ ] Ajustar quem pode o quê: `hasRole("ADMIN")` / `hasAnyRole("ADMIN", "USER")`.
-- [ ] Rotas novas (ex.: `DELETE /x/{id}`) → `requestMatchers(HttpMethod.DELETE, "/x/**")`.
+- [ ] Rotas novas (ex.: `DELETE /x/{id}`) → `requestMatchers(HttpMethod.DELETE, "/x/**")`. O GET precisa de `"/x", "/x/**"` para cobrir `/x/{id}` e `/x/media`. Tabela de receitas no comentário do próprio arquivo.
 
 ### 3. Deploy do back
 Em `.github/workflows/deploy.yml` (na RAIZ do repo):
@@ -42,9 +51,9 @@ Em `.github/workflows/deploy.yml` (na RAIZ do repo):
 - [ ] Push na `main` → aba **Actions** verde → `curl -i http://98.92.208.21:8080/ROTA` deve dar **401**.
 
 ### 4. Front
-- [ ] Trocar a tela `front/src/Avaliacoes.jsx` (campos do formulário, colunas da lista, nome da rota em `fetch`).
-- [ ] `front/vercel.json`: trocar `/api/avaliacoes` e o destino pela rota nova (e porta, se mudou).
-- [ ] `front/src/main.jsx`: só muda se mudar o Auth0.
+- [ ] `front/src/config.js`: `API` com a rota nova (e Auth0, se mudar de tenant).
+- [ ] `front/src/Avaliacoes.jsx`: `[1] VAZIO`, inputs do form `[4.1]`, `<th>/<td>` da tabela `[4.3]` (passo a passo no [front/README.md](front/README.md)).
+- [ ] `front/vercel.json`: trocar `/api/avaliacoes` e o destino pela rota nova (e porta, se mudou). As duas regras (com e sem `/:path*`) são necessárias.
 - [ ] Testar local: `cd front && npm install && npm run dev` → `http://localhost:5173`.
 
 ### 5. Auth0 (só se criar conta/tenant novo)
@@ -52,7 +61,7 @@ Em `.github/workflows/deploy.yml` (na RAIZ do repo):
 - [ ] Application SPA com Callback / Logout / Web Origins = `http://localhost:5173` e a URL da Vercel (sem `/` no final).
 - [ ] Roles `ADMIN` e `USER`, atribuídas aos usuários.
 - [ ] Action post-login com as roles no claim `https://social-insper.com/roles`, **deployada e no fluxo** (Actions → Triggers → post-login → Apply).
-- [ ] Trocar `issuer-uri` (com `/` no final) e `audience` em `application.properties`, e domain/clientId/audience em `main.jsx`.
+- [ ] Trocar `issuer-uri` (com `/` no final) e `audience` em `application.properties`, e domain/clientId/audience em `front/src/config.js`.
 
 ---
 
@@ -75,5 +84,6 @@ docker image prune -a         # liberar disco (imagens sem uso)
 | `Service not found: https://...` no login | API com esse identifier não existe no Auth0 |
 | `Callback URL mismatch` | URL do front faltando nas *Allowed Callback URLs* (sem `/` no final) |
 | 401 logada | `issuer-uri` / `audience` do back diferentes do token |
+| 400 sem dizer o motivo | faltam `server.error.include-*` no `application.properties` |
 | 403 logada | token sem roles: atribuir role ao usuário, conferir Action no fluxo, **Log Out e Log In** |
 | Front: `ERR_CONNECTION_REFUSED` em localhost | `npm run dev` não está rodando |
