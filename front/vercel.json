@@ -1,0 +1,20 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/times",
+      "destination": "http://100.58.186.7:8081/times"
+    },
+    {
+      "source": "/api/times/:path*",
+      "destination": "http://100.58.186.7:8081/times/:path*"
+    },
+        {
+      "source": "/api/partidas",
+      "destination": "http://100.58.186.7:8080/partidas"
+    },
+    {
+      "source": "/api/partidas/:path*",
+      "destination": "http://100.58.186.7:8080/partidas/:path*"
+    }
+  ]
+}

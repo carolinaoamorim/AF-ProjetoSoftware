@@ -1,0 +1,105 @@
+{
+  "info": {
+    "_postman_id": "football-api-collection",
+    "name": "API de Cadastro de Times de Futebol",
+    "description": "Coleção de endpoints para gerenciar times de futebol com MongoDB",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:5000/health",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "5000",
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Verifica se a API está funcionando"
+      },
+      "response": []
+    },
+    {
+      "name": "Times",
+      "item": [
+        {
+          "name": "Listar todos os times",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/times",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "times"
+              ]
+            },
+            "description": "Retorna lista de todos os times cadastrados"
+          },
+          "response": []
+        },
+        {
+          "name": "Obter time por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/times/670a1b2c3d4e5f6g7h8i9j0k",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "times",
+                "670a1b2c3d4e5f6g7h8i9j0k"
+              ]
+            },
+            "description": "Obtém um time específico pelo ID. Substitua o ID pelo ID de um time criado."
+          },
+          "response": []
+        },
+        {
+          "name": "Criar novo time",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Flamengo\",\n  \"estadio\": \"Maracanã\",\n  \"cidade\": \"Rio de Janeiro\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/times",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "5000",
+              "path": [
+                "times"
+              ]
+            },
+            "description": "Cria um novo time de futebol"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
