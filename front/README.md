@@ -1,17 +1,22 @@
-# React + Vite
+# Front-end de Avaliações (React + Vite)
 
-Aqui tem o front da aplicação, uma aplicação react simples, que integra com o Auth0 e as APIs de times e partidas.
+Aplicação React que **lista** e **cadastra** avaliações, autenticada com o **Auth0**.
 
-Para executar a aplicação, primeiro instale as dependêcias com:
+- Todos os usuários autenticados com papel `ADMIN` ou `USER` veem a lista de avaliações.
+- Apenas usuários com papel `ADMIN` veem o formulário de cadastro.
+- O access token do Auth0 é enviado no header `Authorization: Bearer <token>` para a API.
+- Os papéis são lidos da claim `https://social-insper.com/roles` do token.
+
+Para executar a aplicação, instale as dependências:
 
 ```
 npm install
 ```
 
-Depois execute a aplicação:
+Depois execute (o back-end deve estar rodando em `http://localhost:8080`; o Vite faz proxy de `/api`):
 
 ```
 npm run dev
 ```
 
-A configuração da integração com o Auth0 está no arquivo src/main.jsx
+A configuração do Auth0 está em `src/main.jsx`. Em produção (Vercel), o redirecionamento de `/api/avaliacoes` para o back-end está em `vercel.json`.

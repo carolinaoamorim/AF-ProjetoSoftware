@@ -5,8 +5,8 @@ on:
     branches: ["main"]
 
 env:
-  DOCKER_IMAGE: ezambomsantana/partida-ci
-  CONTAINER_NAME: partida
+  DOCKER_IMAGE: ezambomsantana/avaliacao-ci
+  CONTAINER_NAME: avaliacao
   DOCKER_USER: ezambomsantana
 
 jobs:
@@ -61,7 +61,6 @@ jobs:
 
             docker run -d \
               -p 8080:8080 \
-              -e TIME_APP_URL=http://time:5000 \
               -e DB_HOST=postgres-aula \
               --network=rede \
               --name ${{ env.CONTAINER_NAME }} \
