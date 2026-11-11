@@ -135,7 +135,7 @@ textarea:focus {
   padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background: var(--bg);
+  background: var(--baby-blue);
   color: var(--text);
   cursor: pointer;
 }
@@ -204,7 +204,8 @@ td {
 }
 
 th {
-  color: var(--muted);
+  color: var(--text);
+  background: var(--baby-blue);
   font-weight: 600;
   white-space: nowrap;
 }
