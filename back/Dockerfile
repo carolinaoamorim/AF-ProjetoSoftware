@@ -1,22 +1,22 @@
-FROM python:3.11-slim
+# Stage 1: Build
+FROM maven:3.9-eclipse-temurin-25 AS builder
+
+WORKDIR /build
+
+COPY pom.xml .
+RUN mvn dependency:go-offline
+
+COPY src ./src
+
+RUN mvn clean package -DskipTests
+
+# Stage 2: Runtime
+FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 
-# Copiar requirements e instalar dependências Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY --from=builder /build/target/partida-*.jar app.jar
 
-# Copiar código da aplicação
-COPY app.py .
-COPY worker.py .
+EXPOSE 8080
 
-# Expor porta
-EXPOSE 5000
-
-# Variáveis de ambiente padrão
-ENV DB_HOST=mongo
-ENV DB_NAME=football_db
-ENV DB_PORT=27017
-
-# Comando para iniciar a aplicação
-CMD ["python", "app.py"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

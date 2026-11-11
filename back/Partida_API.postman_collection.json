@@ -1,0 +1,76 @@
+{
+  "info": {
+    "name": "Partida API",
+    "description": "API de gerenciamento de partidas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Listar todas as partidas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/partidas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "partidas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Criar partida",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estadio\": \"Arena da Juventude\",\n  \"idMandante\": \"1\",\n  \"idVisitante\": \"2\",\n  \"dataPartida\": \"2026-10-15T20:00:00\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/partidas",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "partidas"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar partida por ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/partidas/1",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "partidas",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
