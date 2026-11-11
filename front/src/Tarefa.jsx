@@ -105,7 +105,7 @@ export default function Tarefa({ token, admin }) {
     <>
       {erro && <p className="erro">{erro}</p>}
 
-      {/* ----- [4.1] FORMULÁRIO (só ADMIN) ----- */}
+      {/* ----- FORMULÁRIO (só ADMIN) ----- */}
       {admin && (
         <section className="card">
           <h2>{'Cadastrar tarefa'}</h2>
@@ -135,6 +135,47 @@ export default function Tarefa({ token, admin }) {
           </form>
         </section>
       )}
+
+      <section className="card">
+        <div className="section-title">
+          <h2>Tarefas cadastradas</h2>
+          <button className="btn" onClick={fetchTarefa} disabled={loading || !token}>
+            Atualizar
+          </button>
+        </div>
+
+        {loading ? (
+          <p className="muted">Carregando tarefas...</p>
+        ) : tarefa.length === 0 ? (
+          <p className="muted">Nenhuma tarefa cadastrada ainda.</p>
+        ) : (
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Criador</th>
+                  <th>Título</th>
+                  <th>Descrição</th>
+                  <th>Prioridade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tarefa.map((a) => (
+                  <tr key={a.id}>
+                    <td>{a.id}</td>
+                    <td>{a.emailCriador}</td>
+                    <td>{a.titulo}</td>
+                    <td>{a.descricao || '-'}</td>
+                    <td>{a.prioridade}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
     </>
   )
 }

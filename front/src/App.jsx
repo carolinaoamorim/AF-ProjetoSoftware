@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { ROLES_CLAIM } from './config'
 import Tarefa from './Tarefa'
-import Perfil from './Perfil'
 import './App.css'
 
 export default function App() {
@@ -20,7 +19,7 @@ export default function App() {
     useAuth0()
   const [token, setToken] = useState('')
   const [roles, setRoles] = useState([])
-  const [pagina, setPagina] = useState('tarefa') // 'tarefa' | 'perfil'
+  const [pagina, setPagina] = useState('tarefa')
 
   // ---------------------------------------------------------------
   // [1] TOKEN E ROLES
@@ -65,10 +64,6 @@ export default function App() {
   return (
     <div className="pagina">
       <header className="card linha">
-        <nav className="linha">
-          <button onClick={() => setPagina('tarefa')}>Tarefa</button>
-          <button onClick={() => setPagina('perfil')}>Perfil</button>
-        </nav>
         <div className="linha">
           <span>{user.email}</span>
           {roles.map((r) => (
@@ -81,7 +76,6 @@ export default function App() {
       </header>
 
       {pagina === 'tarefa' && <Tarefa token={token} admin={admin} />}
-      {pagina === 'perfil' && <Perfil user={user} token={token} roles={roles} />}
     </div>
   )
 }
