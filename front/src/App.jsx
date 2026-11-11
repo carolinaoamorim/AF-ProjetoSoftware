@@ -1,13 +1,3 @@
-// =====================================================================
-// APP: login, cabeçalho e troca de página.
-//
-//   [1] TOKEN E ROLES   pega o token do Auth0 e lê as roles de dentro dele
-//   [2] NÃO LOGADO      tela com o botão de entrar
-//   [3] LOGADO          cabeçalho (menu, email, roles, sair) + página atual
-//
-// Página nova: crie o arquivo (copie Perfil.jsx), importe aqui,
-// adicione um botão no <nav> e uma linha no final, como as que já existem.
-// =====================================================================
 import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
 import { ROLES_CLAIM } from './config'

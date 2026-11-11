@@ -6,7 +6,7 @@
 //   - local (npm run dev): proxy em vite.config.js
 //   - Vercel: rewrites em vercel.json
 // Entidade nova? Troque aqui (ex.: '/api/tarefas') e no vercel.json.
-export const API = '/api/avaliacoes'
+export const API = '/api/tarefa'
 
 // Auth0 (Applications > sua SPA > Settings / APIs > Identifier)
 export const AUTH0_DOMAIN = 'dev-a3l68wtd82inod7x.us.auth0.com'

@@ -1,12 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/avaliacoes",
-      "destination": "http://98.92.208.21:8080/avaliacoes"
+      "source": "/api/tarefa",
+      "destination": "http://98.92.208.21:8080/tarefa"
     },
     {
-      "source": "/api/avaliacoes/:path*",
-      "destination": "http://98.92.208.21:8080/avaliacoes/:path*"
+      "source": "/api/tarefa/:path*",
+      "destination": "http://98.92.208.21:8080/tarefa/:path*"
     }
   ]
 }
