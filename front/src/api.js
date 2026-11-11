@@ -1,16 +1,3 @@
-// =====================================================================
-// API: a ÚNICA função que fala com o back.
-//
-// Uso:
-//   await chamar(token, '')                                  GET    /avaliacoes
-//   await chamar(token, '/5')                                GET    /avaliacoes/5
-//   await chamar(token, '', 'POST', { ...dados })            POST   /avaliacoes
-//   await chamar(token, '/5', 'PUT', { ...dados })           PUT    /avaliacoes/5
-//   await chamar(token, '/5', 'DELETE')                      DELETE /avaliacoes/5
-//
-// Se o back responder erro, lança um Error com a mensagem dele
-// (ex.: "Não pode avaliar a si mesmo", "nota deve ser no máximo 10").
-// =====================================================================
 import { API } from './config'
 
 export async function chamar(token, caminho, metodo = 'GET', corpo) {

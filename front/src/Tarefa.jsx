@@ -138,7 +138,7 @@ export default function Tarefa({ token, admin }) {
     <section className="card">
         <div className="section-title">
           <h2>Tarefas cadastradas</h2>
-          <button className="btn" onClick={fetchAvaliacoes} disabled={loading || !token}>
+          <button className="btn" onClick={fetchTarefa} disabled={loading || !token}>
             Atualizar
           </button>
         </div>

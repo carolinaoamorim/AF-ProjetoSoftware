@@ -29,25 +29,7 @@ public class WebSecurityConfig implements WebMvcConfigurer {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        /*
-                         * COMO MEXER NA PROVA
-                         *
-                         * Situação na prova                    | O que você escreve
-                         * -------------------------------------|---------------------------------------------------------------
-                         * A rota mudou de nome (/tarefas)      | Troque /avaliacoes por /tarefas nas linhas abaixo
-                         * Rota com id (DELETE /tarefas/{id})   | .requestMatchers(HttpMethod.DELETE, "/tarefas/**").hasAuthority("ADMIN")
-                         * ADMIN e USER                         | .hasAnyAuthority("ADMIN", "USER")
-                         * Só ADMIN                             | .hasAuthority("ADMIN")
-                         * Só USER                              | .hasAuthority("USER")
-                         * Qualquer pessoa logada               | Não escreva nada, o anyRequest().authenticated() já cobre
-                         * Rota pública, sem login              | .requestMatchers("/publico/**").permitAll()
-                         *
-                         * - "/x/**" cobre "/x/1", "/x/media"... mas para GET liste também "/x" (a lista).
-                         * - A ordem importa: a primeira linha que casar com a requisição é a que vale,
-                         *   então regras específicas vêm antes de anyRequest().
-                         */
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        // GET /avaliacoes, /avaliacoes?emailAvaliado=x, /avaliacoes/{id}, /avaliacoes/media?email=x
                         .requestMatchers(HttpMethod.GET, "/tarefa", "/tarefa/**").hasAnyAuthority("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/tarefa").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/tarefa/**").hasAuthority("ADMIN")
