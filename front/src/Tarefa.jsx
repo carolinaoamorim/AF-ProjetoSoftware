@@ -1,145 +1,152 @@
-// =====================================================================
-// TELA DE AVALIAÇÕES
-//
-// Índice (procure pelo número com Ctrl+F):
-//   [1] CAMPOS     os campos do formulário  <- trocar na prova
-//   [2] ESTADO     o que a tela guarda (lista, form, erro...)
-//   [3] AÇÕES      listar, salvar, editar, excluir, calcularMedia
-//   [4] TELA       formulário, média, filtros, tabela  <- trocar na prova
-//
-// Trocar a entidade (ex.: Tarefa):
-//   - config.js: API = '/api/tarefas'
-//   - [1] VAZIO com os campos novos
-//   - [4] um <input name="campo"> por campo no form
-//   - [4] um <th> e um <td> por campo na tabela
-//
-// Quem vê o quê:  só ADMIN -> {admin && (...)}   qualquer logado -> sem condição
-// =====================================================================
-import { useEffect, useState } from 'react'
-import { chamar } from './api'
+import { useCallback, useEffect, useState } from 'react'
 
-// ---------------------------------------------------------------
-// [1] CAMPOS: o formulário começa assim (o nome tem que ser igual ao da entidade no back)
-// ---------------------------------------------------------------
-const VAZIO = {
-  titulo: '',
-  descricao: '',
-  prioridade: '',
-  emailCriador: '',
+const API_URL = '/api'
+
+const emptyForm = (emailAvaliador = '') => ({
+  emailAvaliador,
+  emailAvaliado: '',
+  nota: '',
+  comentarios: '',
+})
+
+async function mensagemDeErro(response, padrao) {
+  if (response.status === 401) return 'Sessão inválida. Faça login novamente.'
+  if (response.status === 403) return 'Você não tem permissão para esta ação.'
+  try {
+    const body = await response.json()
+    return body.message || body.detail || padrao
+  } catch {
+    return padrao
+  }
 }
 
-export default function Tarefa({ token, admin }) {
-  // ---------------------------------------------------------------
-  // [2] ESTADO
-  // ---------------------------------------------------------------
-  const [itens, setItens] = useState([])                // linhas da tabela
-  const [form, setForm] = useState(VAZIO)               // o que está digitado no form
-  const [erro, setErro] = useState('')
+export default function Tarefa({ user, token, isAdmin }) {
+  const [tarefas, setTarefas] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [formData, setFormData] = useState(emptyForm(user.email))
+  const [submitting, setSubmitting] = useState(false)
 
-  // Carrega a lista quando a tela abre
+  const fetchTarefa = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await fetch(`${API_URL}/tarefa`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        throw new Error(await mensagemDeErro(response, 'Erro ao buscar tarefas'))
+      }
+      setAvaliacoes(await response.json())
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [token])
+
   useEffect(() => {
-    listar()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (token) fetchTarefa()
+  }, [token, fetchTarefa])
 
-  // Atualiza um campo do form. Funciona para qualquer <input name="...">
-  function mudar(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Roda uma ação mostrando o erro do back na tela, se der erro
-  async function tentar(acao) {
-    setErro('')
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSuccess('')
+
+    if (!formData.emailCriador || !formData.titulo || !formData.descricao || !formData.prioridade) {
+      setError('Preencha os dados')
+      return
+    }
+
     try {
-      await acao()
-    } catch (e) {
-      setErro(e.message)
+      setSubmitting(true)
+      setError('')
+      const response = await fetch(`${API_URL}/tarefas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...formData }),
+      })
+      if (!response.ok) {
+        throw new Error(await mensagemDeErro(response, 'Erro ao cadastrar tarefa'))
+      }
+      const nova = await response.json()
+      setAvaliacoes((prev) => [nova, ...prev])
+      setFormData(emptyForm(user.email))
+      setSuccess('Tarefa cadastrada com sucesso.')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  // ---------------------------------------------------------------
-  // [3] AÇÕES
-  // ---------------------------------------------------------------
-
-  // GET /tarefa
-  function listar() {
-    tentar(async () => {
-      setItens(await chamar(token))
-    })
-  }
-
-  //   function listar() {
-  //   tentar(async () => {
-  //     const params = new URLSearchParams()
-  //     if (filtro.emailAvaliado) params.set('emailAvaliado', filtro.emailAvaliado)
-  //     if (filtro.notaMin !== '') params.set('notaMin', filtro.notaMin)
-  //     const query = params.toString() ? `?${params}` : ''
-  //     setItens(await chamar(token, query))
-  //   })
-  // }
-
-
-  // POST /tarefa
-  function salvar(e) {
-    e.preventDefault()
-    tentar(async () => {
-      const dados = { ...form} // nota: Number(form.nota)
-      chamar(token, '', 'POST', dados)
-
-      listar()
-    })
-  }
-
-  // DELETE /tarefa/{id}
-  function excluir(id) {
-    if (!confirm(`Excluir a tarefa ${id}?`)) return
-    tentar(async () => {
-      await chamar(token, `/${id}`, 'DELETE')
-      listar()
-    })
-  }
-
-  // ---------------------------------------------------------------
-  // [4] TELA
-  // ---------------------------------------------------------------
   return (
     <>
-      {erro && <p className="erro">{erro}</p>}
+      {error && <div className="alert alert-error">{error}</div>}
+      {success && <div className="alert alert-success">{success}</div>}
 
-      {/* ----- FORMULÁRIO (só ADMIN) ----- */}
-      {admin && (
+      {isAdmin ? (
         <section className="card">
-          <h2>{'Cadastrar tarefa'}</h2>
-          <form onSubmit={salvar} className="form">
+          <h2>Cadastrar tarefa</h2>
+          <form onSubmit={handleSubmit} className="form">
             <label>
               Email do criador
-              <input type="email" name="emailCriador" value={form.emailCriador} required />
+              <input
+                type="email"
+                name="emailCriador"
+                value={formData.emailCriador}
+                onChange={handleInputChange}
+                required
+              />
             </label>
             <label>
-              Título
-              <input name="titulo" value={form.titulo} required />
+              Titulo
+              <input
+                name="titulo"
+                value={formData.titulo}
+                onChange={handleInputChange}
+                required
+              />
             </label>
             <label>
-              Descrição
-              <input name="descricao" value={form.descricao} required />
+              Descricao
+              <input
+                name="descricao"
+                value={formData.descricao}
+                onChange={handleInputChange}
+                required
+              />
             </label>
-            <label>
+            <label className="full">
               Prioridade
-              <textarea name="prioridade" value={form.prioridade} />
+              <textarea
+                name="prioridade"
+                value={formData.prioridade}
+                onChange={handleInputChange}
+              />
             </label>
-
-            <div className="linha">
-              <button type="submit" className="primario">
-                'Cadastrar'
-              </button>
-            </div>
+            <button type="submit" className="btn btn-primary full" disabled={submitting || !token}>
+              {submitting ? 'Cadastrando...' : 'Cadastrar tarefa'}
+            </button>
           </form>
         </section>
+      ) : (
+        <p className="muted note">Somente administradores podem cadastrar tarefas.</p>
       )}
 
       <section className="card">
         <div className="section-title">
           <h2>Tarefas cadastradas</h2>
-          <button className="btn" onClick={fetchTarefa} disabled={loading || !token}>
+          <button className="btn" onClick={fetchAvaliacoes} disabled={loading || !token}>
             Atualizar
           </button>
         </div>
@@ -175,7 +182,6 @@ export default function Tarefa({ token, admin }) {
           </div>
         )}
       </section>
-
     </>
   )
 }
