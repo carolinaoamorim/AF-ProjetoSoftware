@@ -63,6 +63,12 @@ Em `.github/workflows/deploy.yml` (na RAIZ do repo):
 - [ ] Action post-login com as roles no claim `https://social-insper.com/roles`, **deployada e no fluxo** (Actions → Triggers → post-login → Apply).
 - [ ] Trocar `issuer-uri` (com `/` no final) e `audience` em `application.properties`, e domain/clientId/audience em `front/src/config.js`.
 
+### Mudanças no Auth0 durante a prova
+
+| Se acontecer | O que fazer no Auth0 |
+|---|---|
+| A prova pede uma role nova (ex.: `GERENTE`) | User Management → Roles → criar a role e atribuir a um usuário. Depois, **Log Out e Log In** no front |
+
 ---
 
 ## Comandos úteis
